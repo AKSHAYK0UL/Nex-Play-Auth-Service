@@ -17,8 +17,10 @@ func NewDB(path string) (*sql.DB, error) {
 	db.SetMaxIdleConns(1)
 	db.SetMaxOpenConns(1)
 	db.SetConnMaxLifetime(time.Minute * 3)
-	if err != nil {
+
+	if err := db.Ping(); err != nil {
 		return nil, err
+
 	}
 	if err := migrate(db); err != nil {
 		return nil, err
