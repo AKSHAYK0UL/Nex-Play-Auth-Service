@@ -16,8 +16,8 @@ func getEnv(key, fallback string) string {
 		return val
 
 	}
-	return fallback
 
+	return fallback
 }
 
 // config struct
@@ -68,5 +68,4 @@ func load() *config {
 		RateLimitRPS:       rps,
 		RateLimitBurst:     burst,
 	}
-
 }
