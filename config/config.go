@@ -21,7 +21,7 @@ func getEnv(key, fallback string) string {
 }
 
 // config struct
-type config struct {
+type Config struct {
 	Port               string
 	DatabasePath       string
 	JWTSecret          string
@@ -38,7 +38,7 @@ type config struct {
 }
 
 // load config
-func load() *config {
+func load() *Config {
 
 	//load env
 	if err := godotenv.Load(); err != nil {
@@ -52,7 +52,7 @@ func load() *config {
 	burst, _ := strconv.Atoi(getEnv("RATE_LIMIT_BURST", "20"))
 	secret := "GAFCGPWGECBW6A5SC646+AS4WIFUJCSABJK874JBMNZCBNMmasvkgkhkvsxlksJHkKVKgjJGkNL"
 
-	return &config{
+	return &Config{
 
 		Port:               getEnv("PORT", "8080"),
 		DatabasePath:       getEnv("DATABASE_PATH", "./auth.db"),

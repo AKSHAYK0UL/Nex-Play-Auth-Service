@@ -26,7 +26,7 @@ type OTP struct {
 // OTP Repo interface
 type OTPRepository interface {
 	Create(ctx context.Context, otp *OTP) error                                  // create OTP and save in the OTP table on db
-	GetLatest(ctx context.Context, userID int64, otpType *OTPType) (*OTP, error) // GET Latest OTP for the Given Type
+	GetLatest(ctx context.Context, userID int64, otpType OTPType) (*OTP, error)  // GET Latest OTP for the Given Type
 	MarkUsed(ctx context.Context, id int64) error                                // mark the OTP as used in the db
 	InvalidatePrevious(ctx context.Context, userID int64, otpType OTPType) error // InvalidatePrevious marks all previous unused OTPs for a user+type as used.
 }

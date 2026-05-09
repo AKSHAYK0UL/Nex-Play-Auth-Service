@@ -68,7 +68,7 @@ func (m *Manager) sign(userID int64, email string, expiry time.Duration, tokenTy
 }
 
 // Genrate Token Pair
-func (m *Manager) GenrateTokenPair(UserID int64, email string) (*TokenPair, error) {
+func (m *Manager) GenerateTokenPair(UserID int64, email string) (*TokenPair, error) {
 
 	access, err := m.sign(UserID, email, m.accessExpiry, accessToken)
 
