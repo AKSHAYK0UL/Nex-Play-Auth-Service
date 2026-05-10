@@ -1,4 +1,4 @@
-package auth
+package authservice
 
 import (
 	"context"
@@ -127,7 +127,7 @@ func (s *Service) consumeOTP(ctx context.Context, userID int64, otpType otp.OTPT
 // SignUp
 func (s *Service) SignUp(ctx context.Context, email, userName, password string) error {
 
-	if err := passwordstrengthchecker.CheckPasswordStrength(password); err != nil {
+	if err := passwordstrengthchecker.Check(password); err != nil {
 
 		return err
 	}
@@ -158,11 +158,12 @@ func (s *Service) SignUp(ctx context.Context, email, userName, password string) 
 	}
 
 	slog.Info("user registered", "user_id", newUser.ID, "email", email)
+
 	return nil
 }
 
-// Verify validates an OTP for the given type and returns a token pair on success
-func (s *Service) Verify(ctx context.Context, email, code string, otpType otp.OTPType) (*jwt.TokenPair, error) {
+// Verify validates an OTP for the given type and returns a token pair on success (signUp only)
+func (s *Service) Verify(ctx context.Context, email, code string) (*jwt.TokenPair, error) {
 
 	u, err := s.userRepo.GetByEmail(ctx, email)
 
@@ -171,12 +172,12 @@ func (s *Service) Verify(ctx context.Context, email, code string, otpType otp.OT
 		return nil, domainerrors.ErrInvalidCredentials
 	}
 
-	if err := s.consumeOTP(ctx, u.ID, otpType, code); err != nil {
+	if err := s.consumeOTP(ctx, u.ID, otp.OTPTypeSignUp, code); err != nil {
 
 		return nil, err
 	}
 
-	if otpType == otp.OTPTypeSignUp && !u.IsVerified {
+	if !u.IsVerified {
 
 		if err := s.userRepo.MarkVerified(ctx, u.ID); err != nil {
 
@@ -217,7 +218,7 @@ func (s *Service) SignIn(ctx context.Context, email, password string) (*jwt.Toke
 	return s.jwt.GenerateTokenPair(u.ID, u.Email)
 }
 
-// forgot
+// forgot send OTP to the given Email
 func (s *Service) ForgotPassword(ctx context.Context, email string) error {
 
 	u, err := s.userRepo.GetByEmail(ctx, email)
@@ -229,6 +230,50 @@ func (s *Service) ForgotPassword(ctx context.Context, email string) error {
 	}
 
 	return s.sentOTP(ctx, u, otp.OTPTypeResetPassword, "password reset")
+}
+
+// Reset Password verify OTP, Update password and returns new JWT Token Par
+func (s *Service) ResetPassword(ctx context.Context, email, code, newPassword string) (*jwt.TokenPair, error) {
+
+	if err := passwordstrengthchecker.Check(newPassword); err != nil {
+
+		return nil, err
+	}
+
+	u, err := s.userRepo.GetByEmail(ctx, email)
+
+	if err != nil {
+		// Don't reveal whether the email exists.
+		return nil, domainerrors.ErrInvalidOTP
+	}
+
+	if err := s.consumeOTP(ctx, u.ID, otp.OTPTypeResetPassword, code); err != nil {
+
+		return nil, err
+	}
+
+	passwordHash, err := hash.Password(newPassword)
+
+	if err != nil {
+
+		return nil, err
+	}
+
+	if err := s.userRepo.UpdatePassword(ctx, u.ID, passwordHash); err != nil {
+
+		return nil, err
+	}
+
+	slog.Info("password reset", "user_id", u.ID)
+
+	token, err := s.jwt.GenerateTokenPair(u.ID, email)
+
+	if err != nil {
+
+		return nil, err
+	}
+
+	return token, nil
 }
 
 // Refresh Token

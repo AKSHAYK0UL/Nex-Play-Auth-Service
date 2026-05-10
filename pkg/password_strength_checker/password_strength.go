@@ -11,7 +11,7 @@ import (
 //	at least 1 uppercase letter
 //	at least 1 lowercase letter
 //	at least 1 special character
-func CheckPasswordStrength(password string) error {
+func Check(password string) error {
 	if len(password) < 8 {
 		return errors.New("password must be at least 8 characters long")
 	}
