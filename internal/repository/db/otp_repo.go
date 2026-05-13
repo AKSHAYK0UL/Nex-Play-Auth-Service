@@ -36,7 +36,7 @@ func (r *OTPRepo) Create(ctx context.Context, otp *otp.OTP) error {
 }
 
 // GET Latest OTP for the Given Type
-func (r *OTPRepo) GetLatest(ctx context.Context, userID int64, otpType *otp.OTPType) (*otp.OTP, error) {
+func (r *OTPRepo) GetLatest(ctx context.Context, userID int64, otpType otp.OTPType) (*otp.OTP, error) {
 
 	const q = `
 		SELECT id, user_id, code, type, expires_at, used, created_at

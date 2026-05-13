@@ -22,7 +22,7 @@ func (sw *statusWriter) WriteHeader(status int) {
 }
 
 // Chain applies middlewares in order
-func chain(h http.Handler, middlerwares ...Middleware) http.Handler {
+func Chain(h http.Handler, middlerwares ...Middleware) http.Handler {
 
 	for i := len(middlerwares) - 1; i >= 0; i-- {
 

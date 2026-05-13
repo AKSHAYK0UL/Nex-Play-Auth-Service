@@ -1,1 +1,9 @@
 .env
+
+nex_play.db
+
+nex_play.db-shm
+
+nex_play.db-wal
+
+server.exe

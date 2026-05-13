@@ -279,7 +279,7 @@ func (s *Service) ResetPassword(ctx context.Context, email, code, newPassword st
 // Refresh Token
 func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*jwt.TokenPair, error) {
 
-	claims, err := s.jwt.Verify(refreshToken)
+	claims, err := s.jwt.VerifyRefresh(refreshToken)
 
 	if err != nil {
 

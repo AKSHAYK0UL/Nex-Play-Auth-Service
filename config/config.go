@@ -38,7 +38,7 @@ type Config struct {
 }
 
 // load config
-func load() *Config {
+func Load() *Config {
 
 	//load env
 	if err := godotenv.Load(); err != nil {

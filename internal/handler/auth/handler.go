@@ -73,7 +73,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusBadRequest, "invalid email address")
 		return
 
-	case usernamechecker.Check(req.UserName):
+	case !usernamechecker.Check(req.UserName):
 
 		response.Error(w, http.StatusBadRequest, "username must be 3–40 characters")
 		return
