@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	domainerrors "nex_play_auth/github.com/internal/domain/errors"
@@ -27,6 +28,7 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/auth/signup", h.signUp)
 	mux.HandleFunc("POST /api/v1/auth/signin", h.signIn)
 	mux.HandleFunc("POST /api/v1/auth/verify", h.verify)
+	mux.HandleFunc("POST /api/v1/auth/otp/resend", h.resentOTP)
 	mux.HandleFunc("POST /api/v1/auth/password/forgot", h.forgotPassword)
 	mux.HandleFunc("POST /api/v1/auth/password/reset", h.resetPassword)
 	mux.HandleFunc("POST /api/v1/auth/token/refresh", h.refreshToken)
@@ -183,6 +185,26 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, tokens)
+}
+
+func (h *Handler) resentOTP(w http.ResponseWriter, r *http.Request) {
+
+	var req ResentotpRequest
+
+	if err := decode(r, &req); err != nil {
+
+		response.Error(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+
+	// Service silently no error if the email doesn't exist
+	_ = h.authSVC.ResentOTP(r.Context(), req.Email, req.Purpose)
+
+	msg := fmt.Sprintf("a %s code has been sent successfully", req.Purpose)
+
+	response.Message(w, http.StatusOK, msg)
 }
 
 // Forgot password

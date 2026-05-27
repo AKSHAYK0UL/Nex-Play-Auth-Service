@@ -20,6 +20,11 @@ type ForgotPasswordRequest struct {
 	Email string `json:"email"`
 }
 
+type ResentotpRequest struct {
+	Email   string `json:"email"`
+	Purpose string `json:"purpose"`
+}
+
 type ResetPasswordRequest struct {
 	Email       string `json:"email"`
 	Code        string `json:"otp"`

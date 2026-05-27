@@ -69,6 +69,13 @@ func (s *Service) sentOTP(ctx context.Context, u *user.User, otpType otp.OTPType
 		return err
 	}
 
+	switch purpose {
+	case "signup":
+		purpose = "SignUp"
+	case "reset_password":
+		purpose = "reset password"
+	}
+
 	go func() {
 
 		if err := s.mailer.SendOTP(u.Email, code, purpose); err != nil {
@@ -216,6 +223,28 @@ func (s *Service) SignIn(ctx context.Context, email, password string) (*jwt.Toke
 	}
 
 	return s.jwt.GenerateTokenPair(u.ID, u.Email)
+}
+
+// resent OTP
+func (s *Service) ResentOTP(ctx context.Context, email, purpose string) error {
+
+	u, err := s.userRepo.GetByEmail(ctx, email)
+
+	//Always returns nil to avoid leaking whether the email exists
+	if err != nil {
+
+		return nil
+	}
+
+	var otpType otp.OTPType
+	switch purpose {
+	case "signup":
+		otpType = otp.OTPTypeSignUp
+	case "reset_password":
+		otpType = otp.OTPTypeResetPassword
+	}
+
+	return s.sentOTP(ctx, u, otpType, purpose)
 }
 
 // forgot send OTP to the given Email
