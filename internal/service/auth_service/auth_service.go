@@ -8,6 +8,7 @@ import (
 	domainerrors "nex_play_auth/github.com/internal/domain/errors"
 	"nex_play_auth/github.com/internal/domain/otp"
 	"nex_play_auth/github.com/internal/domain/user"
+	"nex_play_auth/github.com/internal/handler/middleware"
 	generateotp "nex_play_auth/github.com/pkg/generate_otp"
 	"nex_play_auth/github.com/pkg/hash"
 	"nex_play_auth/github.com/pkg/jwt"
@@ -323,4 +324,24 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken string) (*jwt.T
 	}
 
 	return s.jwt.GenerateTokenPair(u.ID, u.Email)
+}
+
+// Get user Info
+func (s *Service) GetUserByID(ctx context.Context) (*user.User, error) {
+
+	id, ok := middleware.UserIDFromCtx(ctx)
+
+	if !ok {
+
+		return nil, domainerrors.ErrInvalidToken
+	}
+
+	user, err := s.userRepo.GetByID(ctx, id)
+
+	if err != nil {
+
+		return nil, domainerrors.ErrUserNotFound
+	}
+
+	return user, nil
 }

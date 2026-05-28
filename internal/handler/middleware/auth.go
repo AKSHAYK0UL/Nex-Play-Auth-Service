@@ -32,7 +32,7 @@ func RequiredAuth(jwt *jwt.Manager) Middleware {
 
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
-			claims, err := jwt.Verify(tokenStr)
+			claims, err := jwt.VerifyAccess(tokenStr)
 
 			if err != nil {
 

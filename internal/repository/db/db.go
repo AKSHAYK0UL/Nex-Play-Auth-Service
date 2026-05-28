@@ -41,7 +41,7 @@ func migrate(db *sql.DB) error {
 		`CREATE TABLE IF NOT EXISTS users (
 			id            INTEGER  PRIMARY KEY AUTOINCREMENT,
 			email         TEXT     NOT NULL UNIQUE,
-			username      TEXT     NOT NULL UNIQUE,
+			username      TEXT     NOT NULL,
 			password_hash TEXT     NOT NULL,
 			is_verified   INTEGER  NOT NULL DEFAULT 0,
 			created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

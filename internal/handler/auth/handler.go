@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	domainerrors "nex_play_auth/github.com/internal/domain/errors"
+	"nex_play_auth/github.com/internal/handler/middleware"
 	authservice "nex_play_auth/github.com/internal/service/auth_service"
 	emailformatechecker "nex_play_auth/github.com/pkg/email_formate_checker"
 	"nex_play_auth/github.com/pkg/response"
@@ -24,7 +25,8 @@ func NewHander(authSVC *authservice.Service) *Handler {
 }
 
 // Register wires all auth routes onto the mux
-func (h *Handler) Register(mux *http.ServeMux) {
+func (h *Handler) Register(mux *http.ServeMux, authMiddleware middleware.Middleware) {
+	// Public routes
 	mux.HandleFunc("POST /api/v1/auth/signup", h.signUp)
 	mux.HandleFunc("POST /api/v1/auth/signin", h.signIn)
 	mux.HandleFunc("POST /api/v1/auth/verify", h.verify)
@@ -32,6 +34,9 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/auth/password/forgot", h.forgotPassword)
 	mux.HandleFunc("POST /api/v1/auth/password/reset", h.resetPassword)
 	mux.HandleFunc("POST /api/v1/auth/token/refresh", h.refreshToken)
+
+	// Protected routes require authentication
+	mux.Handle("GET /api/v1/auth/user", authMiddleware(http.HandlerFunc(h.getUserByID)))
 }
 
 // Halper
@@ -178,7 +183,7 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 			response.Error(w, http.StatusUnauthorized, "invalid email or password")
 
 		default:
-			slog.Error("could not sign in", err)
+			slog.Error("could not sign in", "error", err)
 			response.Error(w, http.StatusInternalServerError, "could not sign in")
 		}
 		return
@@ -301,4 +306,18 @@ func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, tokens)
+}
+
+func (h *Handler) getUserByID(w http.ResponseWriter, r *http.Request) {
+
+	user, err := h.authSVC.GetUserByID(r.Context())
+
+	if err != nil {
+
+		response.Error(w, http.StatusUnauthorized, "invalid user id or token")
+		return
+	}
+
+	response.JSON(w, http.StatusOK, user)
+
 }

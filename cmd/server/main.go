@@ -83,11 +83,12 @@ func main() {
 		fmt.Fprintln(w, `{"status":"ok"}`)
 	})
 
-	auth.NewHander(authSvc).Register(mux)
-
 	//middlewares
-
+	authMiddleware := middleware.RequiredAuth(jwtManager)
 	rateLimiter := middleware.NewRateLimiter(cfg.RateLimitRPS, cfg.RateLimitBurst)
+
+	//Handlers
+	auth.NewHander(authSvc).Register(mux, authMiddleware)
 
 	handler := middleware.Chain(mux,
 		middleware.RecoverPanic,
@@ -116,7 +117,6 @@ func main() {
 	}()
 
 	//Block until SIGINT or SIGTERM is received
-
 	quit := make(chan os.Signal, 1)
 
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
