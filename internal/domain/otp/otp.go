@@ -29,4 +29,5 @@ type OTPRepository interface {
 	GetLatest(ctx context.Context, userID int64, otpType OTPType) (*OTP, error)  // GET Latest OTP for the Given Type
 	MarkUsed(ctx context.Context, id int64) error                                // mark the OTP as used in the db
 	InvalidatePrevious(ctx context.Context, userID int64, otpType OTPType) error // InvalidatePrevious marks all previous unused OTPs for a user+type as used.
+	DeleteExpiredOrUsed(ctx context.Context) error                               // Delete OTPs that are used or expired
 }

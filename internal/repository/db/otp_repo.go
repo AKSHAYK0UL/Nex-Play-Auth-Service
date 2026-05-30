@@ -15,17 +15,14 @@ type OTPRepo struct {
 
 func NewOTPRepo(db *sql.DB) *OTPRepo {
 	return &OTPRepo{db: db}
-
 }
 
-//OTP interface
-
-// create
+// Create inserts a new OTP record
 func (r *OTPRepo) Create(ctx context.Context, otp *otp.OTP) error {
 
 	const q = `
 		INSERT INTO otps (user_id, code, type, expires_at, used, created_at)
-		VALUES (?, ?, ?, ?, 0, ?)
+		VALUES ($1, $2, $3, $4, FALSE, $5)
 	`
 
 	now := time.Now().UTC()
@@ -35,22 +32,22 @@ func (r *OTPRepo) Create(ctx context.Context, otp *otp.OTP) error {
 	return err
 }
 
-// GET Latest OTP for the Given Type
+// GetLatest returns the most recent unused OTP for the given user and type
 func (r *OTPRepo) GetLatest(ctx context.Context, userID int64, otpType otp.OTPType) (*otp.OTP, error) {
 
 	const q = `
 		SELECT id, user_id, code, type, expires_at, used, created_at
-    	FROM   otps
-    	WHERE  user_id = ? AND type = ? AND used = 0
-    	ORDER  BY created_at DESC
-    	LIMIT  1
+		FROM   otps
+		WHERE  user_id = $1 AND type = $2 AND used = FALSE
+		ORDER  BY created_at DESC
+		LIMIT  1
 	`
 
-	otp := new(otp.OTP)
+	o := new(otp.OTP)
 
 	err := r.db.QueryRowContext(ctx, q, userID, otpType).Scan(
-		&otp.ID, &otp.UserID, &otp.Code, &otp.Type,
-		&otp.ExpireAt, &otp.Used, &otp.CreatedAt,
+		&o.ID, &o.UserID, &o.Code, &o.Type,
+		&o.ExpireAt, &o.Used, &o.CreatedAt,
 	)
 
 	if err != nil {
@@ -59,25 +56,36 @@ func (r *OTPRepo) GetLatest(ctx context.Context, userID int64, otpType otp.OTPTy
 		}
 		return nil, err
 	}
-	return otp, nil
+
+	return o, nil
 }
 
-// mark used otp used = 1
+// MarkUsed marks a single OTP as used by ID
 func (r *OTPRepo) MarkUsed(ctx context.Context, id int64) error {
 
-	const q = `UPDATE otps SET used = 1 WHERE id = ?`
+	const q = `UPDATE otps SET used = TRUE WHERE id = $1`
 
 	_, err := r.db.ExecContext(ctx, q, id)
 
 	return err
 }
 
-// marks all unused OTPs of the given type for a user as used = 1
+// InvalidatePrevious marks all unused OTPs of the given type for a user as used
 func (r *OTPRepo) InvalidatePrevious(ctx context.Context, userID int64, otpType otp.OTPType) error {
 
-	const q = `UPDATE otps SET used = 1 WHERE user_id = ? AND type = ? AND used = 0`
+	const q = `UPDATE otps SET used = TRUE WHERE user_id = $1 AND type = $2 AND used = FALSE`
 
 	_, err := r.db.ExecContext(ctx, q, userID, otpType)
+
+	return err
+}
+
+// DeleteExpiredOrUsed deletes OTPs that are marked as used or have passed their expiration time
+func (r *OTPRepo) DeleteExpiredOrUsed(ctx context.Context) error {
+
+	const q = `DELETE FROM otps WHERE used = TRUE OR expires_at < $1`
+
+	_, err := r.db.ExecContext(ctx, q, time.Now().UTC())
 
 	return err
 }

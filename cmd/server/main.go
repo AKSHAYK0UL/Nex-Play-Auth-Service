@@ -52,6 +52,17 @@ func main() {
 
 	otpRepo := db.NewOTPRepo(database)
 
+	// Background job to clean up expired or used OTPs
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			if err := otpRepo.DeleteExpiredOrUsed(context.Background()); err != nil {
+				slog.Error("failed to delete expired OTPs", "error", err)
+			}
+		}
+	}()
+
 	//pkg
 
 	//JWT

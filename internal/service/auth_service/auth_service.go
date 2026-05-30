@@ -2,7 +2,6 @@ package authservice
 
 import (
 	"context"
-	"crypto/subtle"
 	"log/slog"
 	"nex_play_auth/github.com/config"
 	domainerrors "nex_play_auth/github.com/internal/domain/errors"
@@ -58,9 +57,16 @@ func (s *Service) sentOTP(ctx context.Context, u *user.User, otpType otp.OTPType
 		return err
 	}
 
+	codeHash, err := hash.Password(code)
+
+	if err != nil {
+
+		return err
+	}
+
 	otpRecord := &otp.OTP{
 		UserID:   u.ID,
-		Code:     code,
+		Code:     codeHash,
 		Type:     otpType,
 		ExpireAt: time.Now().UTC().Add(s.cfg.OTPExpiry),
 	}
@@ -122,8 +128,7 @@ func (s *Service) consumeOTP(ctx context.Context, userID int64, otpType otp.OTPT
 		return domainerrors.ErrOTPExpired
 	}
 
-	// Constant time comparison to prevent timing attacks.
-	if subtle.ConstantTimeCompare([]byte(otpRecord.Code), []byte(code)) != 1 {
+	if !hash.CheckPassword(otpRecord.Code, code) {
 
 		return domainerrors.ErrInvalidOTP
 	}
