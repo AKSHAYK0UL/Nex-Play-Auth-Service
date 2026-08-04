@@ -8,6 +8,8 @@ import (
 	"github.com/mailersend/mailersend-go"
 )
 
+//SMTP
+
 type MailerConfig struct {
 	APIKey   string
 	From     string
