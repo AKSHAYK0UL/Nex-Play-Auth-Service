@@ -28,9 +28,11 @@ type Config struct {
 	JWTExpiry          time.Duration
 	RefreshTokenExpire time.Duration
 	OTPExpiry          time.Duration
-	MailerSendAPIKey   string
-	MailFrom           string
-	MailFromName       string
+	SMTPHost           string
+	SMTPPort           int
+	SMTPUser           string
+	SMTPPass           string
+	SMTPFrom           string
 	RateLimitRPS       int
 	RateLimitBurst     int
 }
@@ -45,6 +47,7 @@ func Load() *Config {
 		}
 	}
 
+	smtpPort, _ := strconv.Atoi(getEnv("SMTP_PORT", "2525"))
 	rps, _ := strconv.Atoi(getEnv("RATE_LIMIT_RPS", "10"))
 	burst, _ := strconv.Atoi(getEnv("RATE_LIMIT_BURST", "20"))
 	secret := "GAFCGPWGECBW6A5SC646+AS4WIFUJCSABJK874JBMNZCBNMmasvkgkhkvsxlksJHkKVKgjJGkNL"
@@ -57,9 +60,11 @@ func Load() *Config {
 		JWTExpiry:          15 * time.Minute,
 		RefreshTokenExpire: 7 * 24 * time.Hour,
 		OTPExpiry:          10 * time.Minute,
-		MailerSendAPIKey:   getEnv("MAILERSEND_API_KEY", ""),
-		MailFrom:           getEnv("MAIL_FROM", ""),
-		MailFromName:       getEnv("MAIL_FROM_NAME", "Nex Play"),
+		SMTPHost:           getEnv("SMTP_HOST", "smtp.mailersend.net"),
+		SMTPPort:           smtpPort,
+		SMTPUser:           getEnv("SMTP_USER", ""),
+		SMTPPass:           getEnv("SMTP_PASS", ""),
+		SMTPFrom:           getEnv("SMTP_FROM", "noreply@nexplay.com"),
 		RateLimitRPS:       rps,
 		RateLimitBurst:     burst,
 	}

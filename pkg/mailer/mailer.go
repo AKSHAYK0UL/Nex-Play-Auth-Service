@@ -1,83 +1,67 @@
 package mailer
 
 import (
-	"context"
 	"fmt"
-	"time"
-
-	"github.com/mailersend/mailersend-go"
+	"net/smtp"
+	"strings"
 )
 
-//SMTP
-
 type MailerConfig struct {
-	APIKey   string
-	From     string
-	FromName string
+	Host string
+	Port int
+	User string
+	Pass string
+	From string
 }
 
 type Mailer struct {
-	client *mailersend.Mailersend
-	config MailerConfig
+	mConfig MailerConfig
 }
 
-func New(config MailerConfig) *Mailer {
-	return &Mailer{
-		client: mailersend.NewMailersend(config.APIKey),
-		config: config,
-	}
+// New mailer
+func New(mConfig MailerConfig) *Mailer {
+
+	return &Mailer{mConfig: mConfig}
 }
 
-func (m *Mailer) send(to, subject, text, html string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+// Send
+func (m *Mailer) send(to, subject, body string) error {
 
-	message := m.client.Email.NewMessage()
+	addr := fmt.Sprintf("%s:%d", m.mConfig.Host, m.mConfig.Port)
 
-	message.SetFrom(mailersend.From{
-		Name:  m.config.FromName,
-		Email: m.config.From,
-	})
+	auth := smtp.PlainAuth("", m.mConfig.User, m.mConfig.Pass, m.mConfig.Host)
 
-	message.SetRecipients([]mailersend.Recipient{{
-		Email: to,
-	}})
+	headers := strings.Join([]string{
 
-	message.SetSubject(subject)
-	message.SetText(text)
-	message.SetHTML(html)
+		"From: " + m.mConfig.From,
+		"To: " + to,
+		"Subject: " + subject,
+		"MIME-Version: 1.0",
+		"Content-Type: text/plain; charset=UTF-8",
+	}, "\r\n")
 
-	_, err := m.client.Email.Send(ctx, message)
-	return err
+	msg := headers + "\r\n\r\n" + body
+
+	return smtp.SendMail(addr, auth, m.mConfig.From, []string{to}, []byte(msg))
 }
 
+// Send OTP
 func (m *Mailer) SendOTP(to, code, purpose string) error {
+
 	subject := "Your verification code"
 
-	text := fmt.Sprintf(`Hello,
+	body := fmt.Sprintf(`Hello,
 
 Your verification code for %s is:
 
     %s
 
-This code expires in 10 minutes.
-Do not share this code with anyone.
+This code expires in 10 minutes. Do not share it with anyone.
 
 If you did not request this code, please ignore this email.
 
-— The Nex Play Team`, purpose, code)
+— The Nex Play Team
+`, purpose, code)
 
-	html := fmt.Sprintf(`<!DOCTYPE html>
-<html>
-<body style="font-family:Arial,sans-serif;">
-  <h2>Your verification code</h2>
-  <p>Your verification code for <strong>%s</strong> is:</p>
-  <div style="font-size:32px;font-weight:bold;letter-spacing:4px;padding:16px;background:#f5f5f5;display:inline-block;">%s</div>
-  <p>This code expires in <strong>10 minutes</strong>.</p>
-  <p>If you didn't request this code, you can safely ignore this email.</p>
-  <p>— The Nex Play Team</p>
-</body>
-</html>`, purpose, code)
-
-	return m.send(to, subject, text, html)
+	return m.send(to, subject, body)
 }

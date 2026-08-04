@@ -71,9 +71,11 @@ func main() {
 	//Mailer
 	mailClient := mailer.New(
 		mailer.MailerConfig{
-			APIKey:   cfg.MailerSendAPIKey,
-			From:     cfg.MailFrom,
-			FromName: cfg.MailFromName,
+			Host: cfg.SMTPHost,
+			Port: cfg.SMTPPort,
+			User: cfg.SMTPUser,
+			Pass: cfg.SMTPPass,
+			From: cfg.SMTPFrom,
 		},
 	)
 
