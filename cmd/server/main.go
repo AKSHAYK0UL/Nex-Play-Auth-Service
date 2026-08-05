@@ -69,15 +69,16 @@ func main() {
 	jwtManager := jwt.NewManager(cfg.JWTSecret, cfg.JWTExpiry, cfg.RefreshTokenExpire)
 
 	//Mailer
-	mailClient := mailer.New(
-		mailer.MailerConfig{
-			Host: cfg.SMTPHost,
-			Port: cfg.SMTPPort,
-			User: cfg.SMTPUser,
-			Pass: cfg.SMTPPass,
-			From: cfg.SMTPFrom,
-		},
-	)
+	mailClient, err := mailer.New(context.Background(), mailer.MailerConfig{
+		From:         cfg.GmailFrom,
+		ClientID:     cfg.GmailClientID,
+		ClientSecret: cfg.GmailClientSecret,
+		RefreshToken: cfg.GmailRefreshToken,
+	})
+	if err != nil {
+		slog.Error("failed to create mailer", "error", err)
+		os.Exit(1)
+	}
 
 	//Services
 
