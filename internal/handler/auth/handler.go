@@ -91,7 +91,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		switch {
 
 		case errors.Is(err, domainerrors.ErrUserAlreadyExists):
-			response.Error(w, http.StatusConflict, "email or username is already taken")
+			response.Error(w, http.StatusConflict, "email is already taken")
 
 		case errors.Is(err, domainerrors.ErrWeakPassword):
 			response.Error(w, http.StatusBadRequest, "password must be at least 8 characters")

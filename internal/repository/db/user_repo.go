@@ -19,10 +19,11 @@ func NewUserRepo(db *sql.DB) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-// isUniqueErr checks for PostgreSQL unique constraint violation (error code 23505)
-func isUniqueErr(err error) bool {
+// isEmailUniqueErr checks for a PostgreSQL unique constraint violation (23505)
+// on the email column specifically, so duplicate usernames are allowed.
+func isEmailUniqueErr(err error) bool {
 	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23505"
+	return errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "users_email_key"
 }
 
 // Create inserts a new user and populates the ID, CreatedAt, UpdatedAt fields
@@ -39,7 +40,7 @@ func (r *UserRepo) Create(ctx context.Context, u *user.User) error {
 	err := r.db.QueryRowContext(ctx, q, u.Email, u.UserName, u.PasswordHash, now, now).Scan(&u.ID)
 
 	if err != nil {
-		if isUniqueErr(err) {
+		if isEmailUniqueErr(err) {
 			return domainerrors.ErrUserAlreadyExists
 		}
 		return err
