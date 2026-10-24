@@ -17,7 +17,7 @@ const (
 
 // payload
 type Claims struct {
-	UserID    int64        `json:"user_id"`
+	UserID    string       `json:"user_id"`
 	Email     string       `json:"email"`
 	TokenType JWTTokenType `json:"token_type"`
 	jwt.RegisteredClaims
@@ -50,7 +50,7 @@ func NewManager(secret string, accessExpiry, refreshExpiry time.Duration) *Manag
 // sign creates a signed JWT with the given param
 // tokenType distinguishes access tokens from refresh tokens so they
 // cannot be used interchangeably
-func (m *Manager) sign(userID int64, email string, expiry time.Duration, tokenType JWTTokenType) (string, error) {
+func (m *Manager) sign(userID string, email string, expiry time.Duration, tokenType JWTTokenType) (string, error) {
 
 	now := time.Now()
 
@@ -68,7 +68,7 @@ func (m *Manager) sign(userID int64, email string, expiry time.Duration, tokenTy
 }
 
 // Genrate Token Pair
-func (m *Manager) GenerateTokenPair(UserID int64, email string) (*TokenPair, error) {
+func (m *Manager) GenerateTokenPair(UserID string, email string) (*TokenPair, error) {
 
 	access, err := m.sign(UserID, email, m.accessExpiry, accessToken)
 

@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	ID                int64     `json:"id"`
+	ID                string    `json:"user_id"`
 	Email             string    `json:"email"`
 	UserName          string    `json:"username"`
 	PasswordHash      string    `json:"-"`
@@ -19,9 +19,9 @@ type User struct {
 // user Repo interface
 type UserRepository interface {
 	Create(ctx context.Context, u *User) error
-	GetByID(ctx context.Context, id int64) (*User, error)
+	GetByID(ctx context.Context, id string) (*User, error)
 	GetByEmail(ctx context.Context, email string) (*User, error)
-	UpdatePassword(ctx context.Context, id int64, passwordHash string) error
-	GetPasswordChangedAt(ctx context.Context, id int64) (time.Time, error)
-	MarkVerified(ctx context.Context, id int64) error
+	UpdatePassword(ctx context.Context, id string, passwordHash string) error
+	GetPasswordChangedAt(ctx context.Context, id string) (time.Time, error)
+	MarkVerified(ctx context.Context, id string) error
 }

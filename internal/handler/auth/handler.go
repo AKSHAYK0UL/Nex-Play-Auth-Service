@@ -97,6 +97,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 			response.Error(w, http.StatusBadRequest, "password must be at least 8 characters")
 
 		default:
+			slog.Error("could not create account", "error", err)
 			response.Error(w, http.StatusInternalServerError, "could not create account")
 		}
 

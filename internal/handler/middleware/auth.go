@@ -50,9 +50,9 @@ func RequiredAuth(jwt *jwt.Manager) Middleware {
 }
 
 // Context accessors
-func UserIDFromCtx(ctx context.Context) (int64, bool) {
+func UserIDFromCtx(ctx context.Context) (string, bool) {
 
-	id, ok := ctx.Value(ContextKeyUserID).(int64)
+	id, ok := ctx.Value(ContextKeyUserID).(string)
 
 	return id, ok
 }

@@ -32,7 +32,7 @@ func (r *UserRepo) Create(ctx context.Context, u *user.User) error {
 	const q = `
 		INSERT INTO users (email, username, password_hash, is_verified, created_at, updated_at)
 		VALUES ($1, $2, $3, FALSE, $4, $5)
-		RETURNING id
+		RETURNING user_id
 	`
 
 	now := time.Now().UTC()
@@ -53,11 +53,11 @@ func (r *UserRepo) Create(ctx context.Context, u *user.User) error {
 }
 
 // GetByID fetches a user by their ID
-func (r *UserRepo) GetByID(ctx context.Context, id int64) (*user.User, error) {
+func (r *UserRepo) GetByID(ctx context.Context, id string) (*user.User, error) {
 
 	const q = `
-		SELECT id, email, username, password_hash, is_verified, password_changed_at, created_at, updated_at
-		FROM users WHERE id = $1
+		SELECT user_id, email, username, password_hash, is_verified, password_changed_at, created_at, updated_at
+		FROM users WHERE user_id = $1
 	`
 
 	u := new(user.User)
@@ -81,7 +81,7 @@ func (r *UserRepo) GetByID(ctx context.Context, id int64) (*user.User, error) {
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*user.User, error) {
 
 	const q = `
-		SELECT id, email, username, password_hash, is_verified, password_changed_at, created_at, updated_at
+		SELECT user_id, email, username, password_hash, is_verified, password_changed_at, created_at, updated_at
 		FROM users WHERE email = $1
 	`
 
@@ -103,10 +103,10 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*user.User, er
 }
 
 // UpdatePassword updates the password hash and timestamps for a user
-func (r *UserRepo) UpdatePassword(ctx context.Context, id int64, passwordHash string) error {
+func (r *UserRepo) UpdatePassword(ctx context.Context, id string, passwordHash string) error {
 
 	const q = `
-		UPDATE users SET password_hash = $1, password_changed_at = $2, updated_at = $3 WHERE id = $4
+		UPDATE users SET password_hash = $1, password_changed_at = $2, updated_at = $3 WHERE user_id = $4
 	`
 
 	now := time.Now().UTC()
@@ -117,22 +117,22 @@ func (r *UserRepo) UpdatePassword(ctx context.Context, id int64, passwordHash st
 }
 
 // GetPasswordChangedAt returns the time the user last changed their password
-func (r *UserRepo) GetPasswordChangedAt(ctx context.Context, id int64) (time.Time, error) {
+func (r *UserRepo) GetPasswordChangedAt(ctx context.Context, id string) (time.Time, error) {
 
 	var t time.Time
 
 	err := r.db.QueryRowContext(ctx,
-		`SELECT password_changed_at FROM users WHERE id = $1`, id,
+		`SELECT password_changed_at FROM users WHERE user_id = $1`, id,
 	).Scan(&t)
 
 	return t, err
 }
 
 // MarkVerified sets is_verified to TRUE for the given user ID
-func (r *UserRepo) MarkVerified(ctx context.Context, id int64) error {
+func (r *UserRepo) MarkVerified(ctx context.Context, id string) error {
 
 	const q = `
-		UPDATE users SET is_verified = TRUE, updated_at = $1 WHERE id = $2
+		UPDATE users SET is_verified = TRUE, updated_at = $1 WHERE user_id = $2
 	`
 
 	_, err := r.db.ExecContext(ctx, q, time.Now().UTC(), id)

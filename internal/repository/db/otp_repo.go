@@ -33,7 +33,7 @@ func (r *OTPRepo) Create(ctx context.Context, otp *otp.OTP) error {
 }
 
 // GetLatest returns the most recent unused OTP for the given user and type
-func (r *OTPRepo) GetLatest(ctx context.Context, userID int64, otpType otp.OTPType) (*otp.OTP, error) {
+func (r *OTPRepo) GetLatest(ctx context.Context, userID string, otpType otp.OTPType) (*otp.OTP, error) {
 
 	const q = `
 		SELECT id, user_id, code, type, expires_at, used, created_at
@@ -71,7 +71,7 @@ func (r *OTPRepo) MarkUsed(ctx context.Context, id int64) error {
 }
 
 // InvalidatePrevious marks all unused OTPs of the given type for a user as used
-func (r *OTPRepo) InvalidatePrevious(ctx context.Context, userID int64, otpType otp.OTPType) error {
+func (r *OTPRepo) InvalidatePrevious(ctx context.Context, userID string, otpType otp.OTPType) error {
 
 	const q = `UPDATE otps SET used = TRUE WHERE user_id = $1 AND type = $2 AND used = FALSE`
 

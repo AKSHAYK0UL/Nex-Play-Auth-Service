@@ -99,7 +99,7 @@ func (s *Service) sentOTP(ctx context.Context, u *user.User, otpType otp.OTPType
 }
 
 // Helper
-func (s *Service) consumeOTP(ctx context.Context, userID int64, otpType otp.OTPType, code string) error {
+func (s *Service) consumeOTP(ctx context.Context, userID string, otpType otp.OTPType, code string) error {
 
 	otpRecord, err := s.otpRepo.GetLatest(ctx, userID, otpType)
 
@@ -133,7 +133,7 @@ func (s *Service) consumeOTP(ctx context.Context, userID int64, otpType otp.OTPT
 		return domainerrors.ErrInvalidOTP
 	}
 
-	return s.otpRepo.MarkUsed(ctx, userID)
+	return s.otpRepo.MarkUsed(ctx, otpRecord.ID)
 
 }
 
